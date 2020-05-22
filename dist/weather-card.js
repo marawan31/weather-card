@@ -239,9 +239,15 @@ class WeatherCard extends LitElement {
     const lang = this.hass.selectedLanguage || this.hass.language;
 
     this.numberElements++;
+    let numberOfElements = this._config.number_of_forecasts ? this._config.number_of_forecasts : 5;
+    let forecastFilter = this._config.hourly_forecast ? forecast.filter(function(_, index, __) {
+      return index % 4 == 0;
+    }).slice(0, numberOfElements) : forecast;
+    let forecastValues = forecastFilter.slice(0, numberOfElements);
+    console.log(forecast);
     return html`
       <div class="forecast clear ${this.numberElements > 1 ? "spacer" : ""}">
-      ${forecast.slice(0, this._config.number_of_forecasts ? this._config.number_of_forecasts : 5 ).map(
+      ${forecastValues.map(
         daily => html`
             <div class="day">
               <div class="dayname">
@@ -275,6 +281,16 @@ class WeatherCard extends LitElement {
                     </div>
                   `
                 : ""}
+                ${!this._config.hide_precipitation &&
+                daily.precipitation_prob !== undefined &&
+                daily.precipitation_prob !== null
+                  ? html`
+                      <div class="precipitation">
+                        <ha-icon icon="mdi:water-percent" class="precipitation_icon"></ha-icon>
+                        ${daily.precipitation_prob}<span class="unit"> % </span>
+                      </div>
+                    `
+                  : ""}
             </div>
           `
         )}
@@ -457,6 +473,10 @@ class WeatherCard extends LitElement {
       .precipitation {
         color: var(--primary-text-color);
         font-weight: 300;
+      }
+
+      .precipitation_icon{
+        color: var(--paper-item-icon-color);
       }
 
       .icon.bigger {
